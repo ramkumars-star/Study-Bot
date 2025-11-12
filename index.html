@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syllabus StudyBot</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Google Font 'Inter' -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use Inter as the default font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for a cleaner look */
+        #chat-history::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-history::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        #chat-history::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        #chat-history::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Dark mode scrollbar */
+        .dark #chat-history::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+        .dark #chat-history::-webkit-scrollbar-thumb {
+            background: #718096;
+        }
+        .dark #chat-history::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+    </style>
+    <script>
+        // Set theme based on user preference
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white flex items-center justify-center min-h-screen p-4">
+
+    <!-- Chatbot Container -->
+    <div class="w-full max-w-3xl h-[95vh] bg-white dark:bg-gray-800 shadow-2xl rounded-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700">
+
+        <!-- Header -->
+        <header class="bg-blue-600 dark:bg-blue-700 text-white p-4 flex justify-between items-center shadow-md z-10">
+            <div>
+                <h1 class="text-xl font-bold">Syllabus StudyBot 🎓</h1>
+                <p class="text-sm text-blue-100">Your AI-powered study partner</p>
+            </div>
+            <!-- Theme Toggle Button -->
+            <button id="theme-toggle" class="p-2 rounded-full hover:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-white">
+                <svg id="theme-icon-light" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="theme-icon-dark" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </header>
+
+        <!-- Chat History -->
+        <main id="chat-history" class="flex-1 p-6 overflow-y-auto space-y-4 scroll-smooth">
+            <!-- Initial Bot Message -->
+            <div class="flex justify-start">
+                <div class="p-4 bg-gray-200 dark:bg-gray-700 rounded-xl max-w-lg shadow">
+                    <p class="font-medium text-blue-600 dark:text-blue-400 mb-1">StudyBot</p>
+                    <p>Hello! I'm here to help you learn any school or university topic.
+                        <br><br>
+                        What subject or topic would you like to study today? (e.g., "Photosynthesis," "Pythagorean Theorem," "World War I Causes")
+                    </p>
+                </div>
+            </div>
+            <!-- Chat messages will be appended here -->
+        </main>
+
+        <!-- "Thinking" Indicator -->
+        <div id="loading-indicator" class="px-6 py-2 hidden flex items-center justify-start">
+            <div class="p-4 bg-gray-200 dark:bg-gray-700 rounded-xl shadow inline-flex items-center space-x-2">
+                <svg class="animate-spin h-5 w-5 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-sm font-medium">StudyBot is thinking...</span>
+            </div>
+        </div>
+
+        <!-- Topic Input Area -->
+        <form id="topic-form" class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <label for="topic-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Enter Syllabus Topic:</label>
+            <div class="flex space-x-2">
+                <input type="text" id="topic-input" placeholder="e.g., 'The Carbon Cycle'" class="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                <button type="submit" id="start-topic-btn" class="bg-blue-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                    Start
+                </button>
+            </div>
+        </form>
+
+        <!-- Action Buttons (Hidden initially) -->
+        <div id="action-buttons" class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hidden flex-wrap gap-2 justify-center">
+            <button data-action="explain" class="action-btn bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                Explain Simply
+            </button>
+            <button data-action="facts" class="action-btn bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                Key Facts
+            </button>
+            <button data-action="quiz" class="action-btn bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                Quiz Me
+            </button>
+            <button data-action="new" class="action-btn bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                New Topic
+            </button>
+        </div>
+        
+        <!-- Follow-up Chat Input (Hidden initially) -->
+        <form id="chat-form" class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hidden">
+            <div class="flex space-x-2">
+                <input type="text" id="chat-input" placeholder="Ask a follow-up question..." class="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                <button type="submit" id="send-btn" class="bg-blue-600 text-white font-semibold py-3 px-5 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                    Send
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        // DOM Elements
+        const chatHistory = document.getElementById('chat-history');
+        const topicForm = document.getElementById('topic-form');
+        const topicInput = document.getElementById('topic-input');
+        
+        const actionButtons = document.getElementById('action-buttons');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        
+        const loadingIndicator = document.getElementById('loading-indicator');
+        
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIconLight = document.getElementById('theme-icon-light');
+        const themeIconDark = document.getElementById('theme-icon-dark');
+
+        // App State
+        let currentTopic = "";
+
+        // --- Theme Toggling ---
+        function updateThemeIcon(isDark) {
+            if (isDark) {
+                themeIconLight.classList.remove('hidden');
+                themeIconDark.classList.add('hidden');
+            } else {
+                themeIconLight.classList.add('hidden');
+                themeIconDark.classList.remove('hidden');
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+        });
+
+        // Set initial icon
+        updateThemeIcon(document.documentElement.classList.contains('dark'));
+
+        // --- Chat UI Functions ---
+
+        /**
+         * Adds a message to the chat history.
+         * @param {string} sender - 'user' or 'bot'
+         * @param {string} message - The text content of the message
+         * @param {Array} sources - Array of source objects { uri, title }
+         */
+        function addMessage(sender, message, sources = []) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.classList.add('flex', sender === 'user' ? 'justify-end' : 'justify-start');
+
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('p-4', 'rounded-xl', 'max-w-lg', 'shadow', 'text-gray-900');
+
+            if (sender === 'user') {
+                messageBubble.classList.add('bg-blue-500', 'text-white');
+            } else {
+                messageBubble.classList.add('bg-gray-200', 'dark:bg-gray-700', 'dark:text-white');
+            }
+            
+            // Sanitize message and convert newlines to <br>
+            const messageContent = document.createElement('div');
+            // Using 'prose' for nice formatting of markdown-like text
+            messageContent.classList.add('prose', 'prose-sm', 'dark:prose-invert', 'max-w-none');
+            // Replace newlines with <br> for HTML rendering
+            messageContent.innerHTML = message.replace(/\n/g, '<br>');
+            
+            // Add bot name for bot messages
+            if (sender === 'bot') {
+                const botName = document.createElement('p');
+                botName.classList.add('font-medium', 'text-blue-600', 'dark:text-blue-400', 'mb-1');
+                botName.textContent = 'StudyBot';
+                messageBubble.appendChild(botName);
+            }
+
+            messageBubble.appendChild(messageContent);
+
+            // Add sources if available
+            if (sources.length > 0) {
+                const sourcesContainer = document.createElement('div');
+                sourcesContainer.classList.add('mt-3', 'border-t', 'border-gray-300', 'dark:border-gray-600', 'pt-2');
+                
+                const sourcesTitle = document.createElement('p');
+                sourcesTitle.classList.add('text-xs', 'font-semibold', 'text-gray-600', 'dark:text-gray-400', 'mb-1');
+                sourcesTitle.textContent = 'Learn more:';
+                sourcesContainer.appendChild(sourcesTitle);
+                
+                const sourcesList = document.createElement('ul');
+                sourcesList.classList.add('list-none', 'space-y-1');
+                
+                sources.forEach(source => {
+                    const sourceItem = document.createElement('li');
+                    const sourceLink = document.createElement('a');
+                    sourceLink.href = source.uri;
+                    sourceLink.textContent = source.title || source.uri;
+                    sourceLink.target = '_blank';
+                    sourceLink.rel = 'noopener noreferrer';
+                    sourceLink.classList.add('text-xs', 'text-blue-500', 'dark:text-blue-400', 'hover:underline');
+                    sourceItem.appendChild(sourceLink);
+                    sourcesList.appendChild(sourceItem);
+                });
+                
+                sourcesContainer.appendChild(sourcesList);
+                messageBubble.appendChild(sourcesContainer);
+            }
+
+            messageWrapper.appendChild(messageBubble);
+            chatHistory.appendChild(messageWrapper);
+            
+            // Scroll to bottom
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        // --- API Call Function ---
+
+        /**
+         * A utility function to fetch with exponential backoff.
+         * @param {string} url - The URL to fetch.
+         * @param {object} options - The options for the fetch request.
+         * @param {number} maxRetries - Maximum number of retries.
+         * @returns {Promise<Response>}
+         */
+        async function fetchWithBackoff(url, options, maxRetries = 5) {
+            let delay = 1000; // 1 second
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) {
+                        return response;
+                    }
+                    // Don't retry on client errors (4xx)
+                    if (response.status >= 400 && response.status < 500) {
+                        throw new Error(`Client error: ${response.status} ${response.statusText}`);
+                    }
+                    // Retry on server errors (5xx) or rate limits (429)
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error; // Last retry failed
+                }
+                // Wait before retrying
+                await new Promise(resolve => setTimeout(resolve, delay * (2 ** i)));
+            }
+        }
+
+        /**
+         * Calls the Gemini API to get a response.
+         * @param {string} userQuery - The user's query for the API.
+         */
+        async function callGeminiAPI(userQuery) {
+            loadingIndicator.classList.remove('hidden');
+
+            const apiKey = ""; // API key is handled by the environment
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            // This system instruction defines the bot's persona and task
+            const systemPrompt = "You are Syllabus StudyBot, a helpful and encouraging tutor. You help students learn school and university syllabus topics. Your main goal is to explain complex concepts in a simple, step-by-step, and easy-to-understand way. Your answers must be factual and grounded. You are talking directly to a student.";
+
+            const payload = {
+                contents: [{ 
+                    parts: [{ "text": userQuery }] 
+                }],
+                // Using Google Search for grounding to get factual, syllabus-relevant info
+                tools: [{ 
+                    "google_search": {} 
+                }],
+                systemInstruction: {
+                    parts: [{ "text": systemPrompt }]
+                },
+            };
+
+            try {
+                const response = await fetchWithBackoff(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                const candidate = result.candidates?.[0];
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    const text = candidate.content.parts[0].text;
+                    
+                    // Extract grounding sources
+                    let sources = [];
+                    const groundingMetadata = candidate.groundingMetadata;
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attr => ({
+                                uri: attr.web?.uri,
+                                title: attr.web?.title,
+                            }))
+                            .filter(source => source.uri && source.title); // Ensure sources are valid
+                    }
+                    
+                    addMessage('bot', text, sources);
+
+                } else {
+                    addMessage('bot', "Sorry, I received an unusual response from the server. Please try again.");
+                    console.error("Invalid API response structure:", result);
+                }
+
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                addMessage('bot', "I'm having a little trouble connecting right now. Please check your connection or try again in a moment.");
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        // --- Event Listeners ---
+
+        // Handle Topic Submission
+        topicForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const topic = topicInput.value.trim();
+            if (!topic) return;
+
+            currentTopic = topic;
+            addMessage('user', `I want to study: ${topic}`);
+            
+            // Transition UI
+            topicForm.classList.add('hidden');
+            actionButtons.classList.remove('hidden');
+            chatForm.classList.remove('hidden');
+            
+            // Clear input
+            topicInput.value = "";
+            
+            // Bot confirmation
+            addMessage('bot', `Great! Let's learn about "${currentTopic}".\n\nWhat would you like to do first? You can use the buttons below or ask me a specific question.`);
+        });
+
+        // Handle Action Buttons
+        actionButtons.addEventListener('click', (e) => {
+            if (e.target.classList.contains('action-btn')) {
+                const action = e.target.dataset.action;
+                let userMessage = "";
+                let prompt = "";
+
+                switch(action) {
+                    case 'explain':
+                        userMessage = "Explain this topic to me simply.";
+                        prompt = `Explain the topic "${currentTopic}" to a high school student. Break it down into simple, easy-to-understand parts.`;
+                        callGeminiAPI(prompt);
+                        break;
+                    case 'facts':
+                        userMessage = "What are the key facts?";
+                        prompt = `List the 5 most important key facts or core concepts about "${currentTopic}". Use a numbered list.`;
+                        callGeminiAPI(prompt);
+                        break;
+                    case 'quiz':
+                        userMessage = "Quiz me on this topic!";
+                        prompt = `Create one simple multiple-choice quiz question about "${currentTopic}". Provide 4 options (A, B, C, D). After the question, clearly state the correct answer and a brief explanation for it.`;
+                        callGeminiAPI(prompt);
+                        break;
+                    case 'new':
+                        // Reset UI
+                        currentTopic = "";
+                        actionButtons.classList.add('hidden');
+                        chatForm.classList.add('hidden');
+                        topicForm.classList.remove('hidden');
+                        addMessage('bot', "Okay! What new topic would you like to study?");
+                        return; // Don't add a user message
+                }
+                
+                addMessage('user', userMessage);
+            }
+        });
+
+        // Handle Follow-up Chat Submission
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            addMessage('user', message);
+            chatInput.value = "";
+            
+            // Create a prompt that includes the context of the current topic
+            const prompt = `In the context of the topic "${currentTopic}", the student asks: "${message}". Please answer their question.`;
+            callGeminiAPI(prompt);
+        });
+
+    </script>
+</body>
+</html>
